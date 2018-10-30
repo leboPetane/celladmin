@@ -1,0 +1,51 @@
+
+.pad-top{
+  padding-top: 50px;
+  padding-bottom: 20px;
+}
+.my-report ul li{
+  list-style: none;
+  padding: 8px;
+}
+
+.my-report{
+  padding-top: 5px;
+  border: 1pt solid #f4f4f4;
+
+}
+
+.report-value{
+  font-size: 11pt;
+  margin-left: 20px;
+  padding: 0px 50px;
+  background: #f4f4f4;
+  color: grey;
+  font-weight: lighter;
+}
+
+.report-value:hover{
+  font-weight: normal;
+  background: lightblue;
+  cursor: default;
+}
+
+body{
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10.5pt;
+}
+.track-heading{
+  text-align: center;
+  padding: 10px;
+  text-transform: uppercase;
+  font-weight: lighter;
+  text-decoration: overline;
+  font-size: 13pt;
+}
+
+.track-value{
+  color: darkgrey;
+  font-size: 50pt;
+  padding: 40px;
+  text-align: center;
+  border: 1pt dotted black;
+}

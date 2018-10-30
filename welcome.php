@@ -7,9 +7,12 @@
   if ($_SESSION["logged_in"] == false){
     header("Location: ".ROOT_URL);
   }else{
+
     $member_total = 0;
     $report_total = 0;
     $cell_name = $_SESSION["username"];
+    $email = $_SESSION["user"];
+
     $query = "SELECT * FROM members WHERE cell_group = \"$cell_name\"";
     $results = mysqli_query($conn, $query);
     if (mysqli_query($conn, $query)){
@@ -21,11 +24,11 @@
       echo "Error: query not - i dont know: ".mysqli_error($conn);
     }
 
-    $email = $_SESSION["user"];
+
     $query = "SELECT * FROM cell_leaders WHERE username = \"$email\"";
     $results = mysqli_query($conn, $query);
     if (mysqli_query($conn, $query)){
-      //Get Members
+      //Get Leader Details
       $leader = mysqli_fetch_assoc($results);
       $report_total = $leader["reports"];
 
@@ -61,6 +64,21 @@
         $query = "INSERT INTO members (name, surname, email, cell_number, cell_group, group_name, chapter, birthday) VALUES('$member_name', '$member_surname', '$member_email', '$member_number', '$cell_name', '$member_group', '$member_chapter', '$member_birthday')";
         if (mysqli_query($conn, $query)){
 
+          // +++++ Update number of members on leader's table
+
+          $query = "SELECT * FROM cell_leaders WHERE cell_name = '$cell_name'";
+          $leader_temp = mysqli_fetch_assoc(mysqli_query($conn, $query));
+          $members_of_leader = $leader_temp["members"] + 1;
+
+          $query = "UPDATE cell_leaders
+                    SET members = $members_of_leader
+                    WHERE cell_name = '$cell_name'";
+          $results = mysqli_query($conn, $query);
+          if (mysqli_query($conn, $query)){
+          }else{
+            echo "Error: query not - i dont know: ".mysqli_error($conn);
+          }
+
           //++++++++++++++++++ Handle invited by  ++++++++++++++++++++++
 
           if ($member_invite != "Cell leader"){
@@ -77,6 +95,7 @@
             }else{
               echo "Error: query not - i dont know: ".mysqli_error($conn);
             }
+
           }
 
           //++++++++++++++++++++ Update display now that the new member has been added ++++++++++++++++++++
@@ -98,6 +117,7 @@
           $msgClass = "danger";
         }
 
+        header("Location: ".WELCOME);
       }else{
         $msg = "Member not added: Invalid email - please re enter email";
         $msgClass = "danger";
@@ -105,14 +125,31 @@
 
     }
 
-//========================================================== GEt Reports ===================================================
+//========================================================== Reports ===================================================
 
   $query = "SELECT * FROM reports WHERE cell_name = '$cell_name'";
   $results = mysqli_query($conn, $query);
   if (mysqli_query($conn, $query)){
     $cell_reports = mysqli_fetch_all($results, MYSQLI_ASSOC);
+
+    $total_attendence = 0;
+    $total_converts = 0;
+    $total_first_timers = 0;
+    $weekly_attendence = 0;
+    $average_first_timers = 0;
+
+    $total_r = count($cell_reports);
+
+    foreach ($cell_reports as $report) {
+      $total_attendence = $total_attendence + $report["attendance"];
+      $total_converts = $total_converts + $report["new_converts"];
+      $total_first_timers = $total_first_timers + $report["first_timers"];
+    }
+
+    $weekly_attendence = floor($total_attendence / $total_r);
+    $average_first_timers = floor($total_first_timers / $total_r);
   }else{
-    echo "Error: : ".mysqli_error($conn);
+    echo "Error: ".mysqli_error($conn);
   }
 
 //========================================================== Get Birthday list for the month ===================================================
@@ -125,7 +162,17 @@
     }
   }
 
-//========================================================== Get Ministry Materials ===================================================
+//========================================================== Track Cell ===================================================
+
+
+
+  $query = "SELECT * FROM reports WHERE cell_name = '$cell_name'";
+  $results = mysqli_query($conn, $query);
+  if (mysqli_query($conn, $query)){
+    $cell_reports = mysqli_fetch_all($results, MYSQLI_ASSOC);
+  }else{
+    echo "Error: ".mysqli_error($conn);
+  }
 
 
   }
@@ -152,10 +199,10 @@
           View Birthday List <span class="badge badge-warning badge-pill"><?php echo $birthday_list; ?></span>
         </a>
         <a class="list-group-item list-group-item-info" id="list-attendance-list" data-toggle="list" href="#list-attendance" role="tab" aria-controls="profile">
-          Track attendance <span class="badge badge-warning badge-pill"><?php echo "a/w: ".($member_total+5); ?></span>
+          Track My Cell <span class="badge badge-warning badge-pill"><?php echo "a/w: ".$weekly_attendence; ?></span>
         </a>
         <a class="list-group-item list-group-item-info" id="list-materials-list" data-toggle="list" href="#list-materials" role="tab" aria-controls="profile">
-          Track Ministry Materials <span class="badge badge-warning badge-pill"><?php echo ($member_total+57); ?></span>
+          Ministry Materials <span class="badge badge-warning badge-pill"><?php echo ($member_total+7); ?></span>
         </a>
         <button type="button" class="list-group-item list-group-item-secondary btn btn-outline-info">Start Cell</button>
       </div>
@@ -301,7 +348,7 @@
                     <tbody>
                       <?php foreach ($members as $member): ?>
                       <tr>
-                        <td> <a href="#"><?php echo ($member["name"])." ".($member["surname"]); ?></a></td>
+                        <td> <a href="member.php?member=<?php echo $member["id"]; ?>"><?php echo ($member["name"])." ".($member["surname"]); ?></a></td>
                         <td><?php echo $member["email"]; ?></td>
                         <td><?php echo $member["cell_number"]; ?></td>
                         <td><?php echo $member["group_name"]; ?></td>
@@ -371,7 +418,7 @@
                 <?php foreach ($members as $member): ?>
                 <?php if (date("F", strtotime($member["birthday"])) == $current_month): ?>
                 <tr>
-                  <td> <a href="#"><?php echo ($member["name"])." ".($member["surname"]); ?></a></td>
+                  <td> <a href="member.php?member=<?php echo $member["id"]; ?>"><?php echo ($member["name"])." ".($member["surname"]); ?></a></td>
                   <td><?php echo $member["email"]; ?></td>
                   <td><?php echo $member["cell_number"]; ?></td>
                   <td><?php echo $member["group_name"]; ?></td>
@@ -396,16 +443,34 @@
             <h5 class="display-4 alert-light">Attendance</h5>
             <hr>
 
-            Attend please
-            <div class="rounded-circle border border-info">
-              67
-            </div>
+            <div class="row">
+              <div class="col-md-6 col-xs-12">
+                <h4 class="track-heading">Total Attendance</h4>
+                <h5 class="track-value"><?php echo $total_attendence; ?></h5>
+              </div>
 
+              <div class="col-md-6 col-xs-12">
+                <h4 class="track-heading">Total Converts</h4>
+                <h5 class="track-value"><?php echo $total_converts; ?></h5>
+              </div>
+
+              <div class="col-md-6 col-xs-12">
+                <h4 class="track-heading">Weekly Attendance</h4>
+                <h5 class="track-value"><?php echo $weekly_attendence; ?></h5>
+              </div>
+
+              <div class="col-md-6 col-xs-12">
+                <h4 class="track-heading">Average First Timers</h4>
+                <h5 class="track-value"><?php echo $average_first_timers; ?></h5>
+              </div>
+
+            </div>
 
           </div> <!-- end of content container -->
         </div>  <!-- end of fade -->
 
 <!-- ///////////////////////////////////////////////////////////////// Materials //////////////////////////////////////////////////-->
+
         <div class="tab-pane fade" id="list-materials" role="tabpanel" aria-labelledby="list-materials-list">
           <div class="container" style="padding-top:30px;">
             <h5 class="display-4 alert-light">Materials</h5>

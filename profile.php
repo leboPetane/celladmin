@@ -107,7 +107,7 @@
       </div>
       <fieldset disabled>
         <div class="form-group">
-          <label for="cell_name">Email</label>
+          <label for="email">Email</label>
           <input type="email" class="form-control" name="cell_name" name="email" value = "<?php echo $data["username"] ?>">
         </div>
       </fieldset>

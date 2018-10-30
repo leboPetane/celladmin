@@ -1,6 +1,10 @@
-# celladmin
-portal for cells
+# portal for cells
 
 #requirements
 
-apache server, my sql and php
+apache server.
+recommended : XAMPP.
+
+#notes
+
+Please import the cell_ministry.sql to your local phpAdmin for database setup.
