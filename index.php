@@ -4,15 +4,18 @@
 
   session_start();
 
-  if(count($_SESSION) <= 1){ //user has never logged in
-    $_SESSION["logged_in"] = false; //user must log in
-    //echo "never logged in\n";
-  }else{
-    //echo "logged in before\n";
-    if ($_SESSION["logged_in"] == true){
-      //echo "User has not logged out and is in log in page\n";
-      header("Location: ".WELCOME); //user does not need to log in again, count($_SESSION) will br > 1
-    }else{
+  if(count($_SESSION) <= 1) //user has never logged in
+  {
+    $_SESSION["logged_in"] = false;
+  }
+  else
+  {
+    if ($_SESSION["logged_in"] == true) //echo "User has not logged out and is in log in page\n";
+    {
+      header("Location: ".WELCOME); //user does not need to log in again, count($_SESSION) will be > 1
+    }
+    else
+    {
       //echo "User has logged out and must log in again\n";
     }
   }
@@ -20,7 +23,8 @@
   $msg = "";
   $msgClass = "danger";
 
-  if (filter_has_var(INPUT_POST, "submit")){
+  if (filter_has_var(INPUT_POST, "submit"))
+  {
     $email = mysqli_real_escape_string($conn, htmlentities($_POST["email"]));
     $pass = mysqli_real_escape_string($conn, htmlentities($_POST["password"]));
 
@@ -28,19 +32,25 @@
 
     //get the user
     $query = "SELECT * FROM cell_leaders WHERE username = \"$email\"";
-
     $results = mysqli_query($conn, $query);
 
-    if (mysqli_query($conn, $query)){
+    if (mysqli_query($conn, $query))
+    {
       $data = mysqli_fetch_assoc($results);
-      if ($data == null){
+      if ($data == null)
+      {
         $msg = "Cell leader not registered, please register your cell.";
         $msgClass = "danger";
-      }else{
-        if ($data["password"] != $pass){
+      }
+      else
+      {
+        if ($data["password"] != $pass)
+        {
           $msg = "Incorrect password.";
           $msgClass = "danger";
-        }else{
+        }
+        else
+        {
           $_SESSION["logged_in"] = true;
           $_SESSION["username"] = $data["cell_name"];
           $_SESSION["user"] = $data["username"];
@@ -49,7 +59,9 @@
           header("Location: ".WELCOME);
         }
       }
-    }else{
+    }
+    else
+    {
       $msg = "Error: Unable to log in";
       $msgClass = "danger";
     }

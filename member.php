@@ -9,26 +9,64 @@
   }else{
 
     //================================GET Member ===============================
-    if($_GET["member"]){
-      $id = $_GET["member"];
+    if($_GET["q"]){
+      $id = $_GET["q"];
       $query = "SELECT * FROM members WHERE id= '$id'";
       $results = mysqli_query($conn, $query);
       if (mysqli_query($conn, $query)){
         $data = mysqli_fetch_assoc($results);
         if ($data['cell_group'] != $_SESSION["username"]){
           header("Location: ".WELCOME);
+        }else {
+          $query = "SELECT * FROM members WHERE id= '$id'";
+          $results = mysqli_query($conn, $query);
+          if (mysqli_query($conn, $query)){
+            $data = mysqli_fetch_assoc($results);
+
+            if ( filter_has_var(INPUT_GET, "delete") ){
+              echo "deleting";
+              $query = "DELETE FROM members WHERE members. id = '$id'";
+
+              if (mysqli_query($conn, $query)){
+                header("Location: ".WELCOME);
+              }else{
+                echo "Error: ".mysqli_error($conn);
+              }
+            }else if ( filter_has_var(INPUT_GET, "update") ){
+              echo "Updating";
+              $title = $_GET["title"];
+              $name = $_GET["name"];
+              $surname = $_GET["surname"];
+              $email = $_GET["email"];
+              $bday = $_GET["birthday"];
+              $number = $_GET["cell_number"];
+              $group = $_GET["group"];
+              $chapter = $_GET["chapter"];
+              $query = "UPDATE members
+                        SET title = '$title',
+                            name = '$name',
+                            surname = '$surname',
+                            email = '$email',
+                            birthday = '$bday',
+                            cell_number = '$number',
+                            group_name = '$group',
+                            chapter = '$chapter'
+
+                            WHERE members. id = '$id'";
+
+              if (mysqli_query($conn, $query)){
+                header("Location: ".WELCOME);
+              }else {
+                echo "Error: ".mysqli_error($conn);
+              }
+            }
+          }  //---> Query endif
         }
       }else{
         header("Location: ".WELCOME);
       }
     }else{
       header("Location: ".WELCOME);
-    }
-
-    $query = "SELECT * FROM members WHERE id= '$id'";
-    $results = mysqli_query($conn, $query);
-    if (mysqli_query($conn, $query)){
-      $data = mysqli_fetch_assoc($results);
     }
 
   }
@@ -45,8 +83,8 @@
           </small>
         <?php endif; ?>
 
-        <form action="<?php echo $_SERVER["PHP_SELF"]; ?>" method="post">
-
+        <form action="<?php echo $_SERVER["PHP_SELF"]; ?>" method="get">
+          <input type="hidden" name="q" value="<?php echo $_GET["q"]; ?>">
           <div class="form-row ">
             <div class="form-group col-md-2">
               <label for="title">Title</label>
@@ -65,35 +103,35 @@
             </div>
 
             <div class="form-group col-md-5">
-              <label for="name"> Surname</label>
+              <label for="surname"> Surname</label>
               <input type="text" class="form-control" name="surname" value = "<?php echo $data["surname"]; ?>">
             </div>
           </div>
 
           <div class="form-group">
-            <label for="leader_name">Email</label>
-            <input type="email" class="form-control" name="leader_name" value = "<?php echo $data["email"] ?>">
+            <label for="email">Email</label>
+            <input type="email" class="form-control" name="email" value = "<?php echo $data["email"] ?>">
           </div>
 
           <div class="form-group">
-            <label for="email">Birthday</label>
-            <input type="text" class="form-control" name="cell_name" name="email" value = "<?php echo Date('Y F d ', strtotime($data['birthday'])); ?>">
+            <label for="birthday">Birthday</label>
+            <input type="text" class="form-control"  name="birthday" value = "<?php echo $data['birthday']; ?>">
           </div>
 
           <div class="form-group">
-            <label for="leader_surname">Cell Number</label>
-            <input type="text" class="form-control" name="leader_surname" name="leader_surname" value = "<?php echo $data["cell_number"] ?>">
+            <label for="cell_number">Cell Number</label>
+            <input type="text" class="form-control" name="cell_number" value = "<?php echo $data["cell_number"] ?>">
           </div>
 
           <div class="form-row">
             <div class="form-group col-md-6">
-              <label for="email">Group</label>
-              <input type="text" class="form-control" name="cell_name" name="email" value = "<?php echo $data["group_name"] ?>">
+              <label for="group">Group</label>
+              <input type="text" class="form-control"  name="group" value = "<?php echo $data["group_name"] ?>">
             </div>
 
             <div class="form-group col-md-6">
-              <label for="member_Chapter">Chapter</label>
-              <select name="member_Chapter" required class="form-control">
+              <label for="chapter">Chapter</label>
+              <select name="chapter" required class="form-control">
                 <option selected><?php echo $data["chapter"] ?></option>
                 <?php $groups = array('UCT','UWC', 'Stellenbosch', 'Colleges', 'CPUT TOWN', 'CPUT BELLVILLE', 'OTHER') ?>
                 <?php foreach($groups as $group): ?>
@@ -106,23 +144,23 @@
           <fieldset disabled>
             <div class="form-row">
               <div class="form-group col-md-4">
-                <label for="email">Attended</label>
-                <input type="text" class="form-control" name="cell_name" name="email" value = "<?php echo $data["attendance"] ?>">
+                <label for="attended">Attended</label>
+                <input type="text" class="form-control" name="attended" value = "<?php echo $data["attendance"] ?>">
               </div>
               <div class="form-group col-md-4">
-                <label for="email">Invited</label>
-                <input type="text" class="form-control" name="cell_name" name="email" value = "<?php echo $data["invites"] ?>">
+                <label for="invited">Invited</label>
+                <input type="text" class="form-control" name="invited" value = "<?php echo $data["invites"] ?>">
               </div>
               <div class="form-group col-md-4">
-                <label for="email">Joined</label>
-                <input type="text" class="form-control" name="cell_name" name="email" value = "<?php echo $data["joined"] ?>">
+                <label for="joined">Joined</label>
+                <input type="text" class="form-control" name="joined" value = "<?php echo $data["joined"] ?>">
               </div>
             </div>
           </fieldset>
 
           <div class="container">
-            <button type="submit" name="submit" class="btn btn-outline-info">Update</button>
-            <button type="submit" name="submit" class="btn btn-outline-danger">Delete Member</button>
+            <button type="submit" name="update" class="btn btn-outline-info">Update</button>
+            <button type="submit" name="delete" class="btn btn-outline-danger">Delete Member</button>
             <a href="<?php echo WELCOME; ?>" class="btn btn-link btn-sm">Go home</a>
           </div>
 

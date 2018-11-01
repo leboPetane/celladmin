@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="images/iconn.png">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
 
     <title>Cell Ministry</title>
   </head>
@@ -25,10 +28,6 @@
           </div>
         </li>
       </ul>
-      <form class="form-inline my-2 my-lg-0">
-        <input class="form-control mr-sm-2" type="search" placeholder="Search report/member..." aria-label="Search">
-        <button class="btn btn-outline-info my-2 my-sm-0" type="submit">Search</button>
-      </form>
     </div>
   </nav>
   <script type="text/javascript" src="http://localhost/bootstrap/js/bootstrap.min.js"></script>

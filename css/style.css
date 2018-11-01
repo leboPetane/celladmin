@@ -49,3 +49,36 @@ body{
   text-align: center;
   border: 1pt dotted black;
 }
+.list-group-item{
+  font-size: 10.5pt;
+}
+.active{
+}
+a{
+  color: #333;
+}
+a:hover{
+  color: grey;
+  text-decoration: overline;
+}
+.mybtn{
+  background: skyblue;
+}
+.mybtn:hover{
+  cursor: pointer;
+  background: lightblue;
+  color: black;
+}
+.hideme{
+    left: 0;
+    top: 330px;
+    padding: 0;
+    position: fixed;
+    color: white;
+    background: black;
+    padding: 5px 10px;
+}
+.hideme:hover{
+  text-decoration: none;
+  cursor: pointer;
+}

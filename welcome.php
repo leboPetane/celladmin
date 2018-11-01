@@ -1,12 +1,18 @@
 <?php require "db.php"; ?>
 <?php
+
   session_start();
+
   $msg = "";
   $msgClass = "danger";
   $members = "other";
-  if ($_SESSION["logged_in"] == false){
+
+  if ($_SESSION["logged_in"] == false)
+  {
     header("Location: ".ROOT_URL);
-  }else{
+  }
+  else
+  {
 
     $member_total = 0;
     $report_total = 0;
@@ -15,33 +21,45 @@
 
     $query = "SELECT * FROM members WHERE cell_group = \"$cell_name\"";
     $results = mysqli_query($conn, $query);
-    if (mysqli_query($conn, $query)){
-      //Get Members
+
+    if (mysqli_query($conn, $query))
+    {
+
       $members = mysqli_fetch_all($results, MYSQLI_ASSOC);
       $member_total = count($members);
 
-    }else{
-      echo "Error: query not - i dont know: ".mysqli_error($conn);
+    }
+    else
+    {
+
+      echo "Error: Unable to retrieve members for your cell - contact media with this error: ".mysqli_error($conn);
+
     }
 
 
     $query = "SELECT * FROM cell_leaders WHERE username = \"$email\"";
     $results = mysqli_query($conn, $query);
-    if (mysqli_query($conn, $query)){
+
+    if (mysqli_query($conn, $query))
+    {
       //Get Leader Details
       $leader = mysqli_fetch_assoc($results);
       $report_total = $leader["reports"];
 
-    }else{
-      echo "Error: query not - i dont know: ".mysqli_error($conn);
+    }
+    else
+    {
+      echo "Error: Unable to retrieve cell leaders details - contact media with this error: ".mysqli_error($conn);
     }
 
-//======================================================= Insert new member===================================================
+    /*                    -------------------------------------------------                                         */
+    /*                    +               Inserting a new member          +                                              */
+    /*                    -------------------------------------------------                                         */
 
-    if (filter_has_var(INPUT_POST, "new_member")){
+    if (filter_has_var(INPUT_POST, "new_member"))
+    {
 
-      //+++++++++++++++++++++++++++++++++++++++++++ Get DATA for new member +++++++++++++++++++++++++++++++++++++++++++++++++++
-
+      //Variable to store new member data
       $member_title = mysqli_real_escape_string($conn, htmlentities($_POST["title"]));
       $member_name = mysqli_real_escape_string($conn, htmlentities($_POST["member_Name"]));
       $member_name = filter_var( $member_name , FILTER_SANITIZE_STRING );
@@ -55,17 +73,17 @@
       $member_birthday = $_POST["member_birthday"];
       $member_invite = mysqli_real_escape_string($conn, htmlentities($_POST["member_invite"]));
 
-      if (filter_var($_POST["member_Email"], FILTER_VALIDATE_EMAIL)){
+      if (filter_var($_POST["member_Email"], FILTER_VALIDATE_EMAIL))
+      {
         $member_email = mysqli_real_escape_string($conn, htmlentities($_POST["member_Email"]));
         $member_email = filter_var( $member_email , FILTER_SANITIZE_EMAIL);
+        //insert member to DB
+        $query = "INSERT INTO members (title, name, surname, email, cell_number, cell_group, group_name, chapter, birthday) VALUES('$member_title', '$member_name', '$member_surname', '$member_email', '$member_number', '$cell_name', '$member_group', '$member_chapter', '$member_birthday')";
 
-        //+++++++++++++++++++++++++++++++++++++++++ Put data of new member into db  +++++++++++++++++++++++++++++++++++++++++++++
+        if (mysqli_query($conn, $query))
+        {
 
-        $query = "INSERT INTO members (name, surname, email, cell_number, cell_group, group_name, chapter, birthday) VALUES('$member_name', '$member_surname', '$member_email', '$member_number', '$cell_name', '$member_group', '$member_chapter', '$member_birthday')";
-        if (mysqli_query($conn, $query)){
-
-          // +++++ Update number of members on leader's table
-
+          //Update number of members on DB
           $query = "SELECT * FROM cell_leaders WHERE cell_name = '$cell_name'";
           $leader_temp = mysqli_fetch_assoc(mysqli_query($conn, $query));
           $members_of_leader = $leader_temp["members"] + 1;
@@ -73,16 +91,26 @@
           $query = "UPDATE cell_leaders
                     SET members = $members_of_leader
                     WHERE cell_name = '$cell_name'";
+
           $results = mysqli_query($conn, $query);
-          if (mysqli_query($conn, $query)){
-          }else{
-            echo "Error: query not - i dont know: ".mysqli_error($conn);
+
+          if (mysqli_query($conn, $query))
+          {
+            //updated succesfully
+          }
+          else
+          {
+            echo "Error: Unable to update member addition on number of members for cell leader - please contact media with error: ".mysqli_error($conn);
           }
 
-          //++++++++++++++++++ Handle invited by  ++++++++++++++++++++++
+          //           Handling invited by
+          //        1. The DB keeps track of each members invites, so that
+          //        2. When a new member is inserted to the cell and that new member has invited by an existing member.
+          //        3. The cell leader can track each member on how many people they have invited in the cell
 
-          if ($member_invite != "Cell leader"){
 
+          if ($member_invite != "Cell leader")
+          {
             $query = "SELECT * FROM members WHERE concat(members.name, ' ', members.surname) = '$member_invite'";
             $invitor = mysqli_fetch_assoc(mysqli_query($conn, $query));
             $invites = $invitor["invites"] + 1;
@@ -91,99 +119,151 @@
                       SET invites = $invites
                       WHERE concat(members.name, ' ', members.surname) = '$member_invite'";
             $results = mysqli_query($conn, $query);
-            if (mysqli_query($conn, $query)){
-            }else{
-              echo "Error: query not - i dont know: ".mysqli_error($conn);
+
+            if (mysqli_query($conn, $query))
+            {
+              //succesfully updated the the number of invites on the member.
+            }
+            else
+            {
+              echo "Error: Unable to update the invitor of a new member - please contact media with this error: ".mysqli_error($conn);
             }
 
           }
 
-          //++++++++++++++++++++ Update display now that the new member has been added ++++++++++++++++++++
+          //          Updating the display on the left menu now that the member has been added on DB
+          //          1. This is the number at the end of the text 'Members'
 
           $query = "SELECT * FROM members WHERE cell_group = \"$cell_name\"";
           $results = mysqli_query($conn, $query);
-          if (mysqli_query($conn, $query)){
+
+          if (mysqli_query($conn, $query))
+          {
             //Get Members
             $members = mysqli_fetch_all($results, MYSQLI_ASSOC);
             $member_total = count($members);
-          }else{
-            echo "Error: query not - i dont know: ".mysqli_error($conn);
+          }
+          else
+          {
+            echo "Error: Unable to retrieve members data: ".mysqli_error($conn);
           }
 
           $msg = $member_title." ".$member_name." has been sucessfully added to"." ". $_SESSION['username'];
           $msgClass = "success";
-        }else{
-          $msg = "Error: ".mysqli_error($conn)." \nplease contact technical team :(";
+
+        }
+        else
+        {
+          $msg = "Error: ".mysqli_error($conn)." \n please contact technical team :(";
           $msgClass = "danger";
         }
 
         header("Location: ".WELCOME);
-      }else{
+
+      }
+      else
+      {
         $msg = "Member not added: Invalid email - please re enter email";
         $msgClass = "danger";
       }
 
     }
 
-//========================================================== Reports ===================================================
+  /*                    -------------------------------------------------                                         */
+  /*                    +       Handling reports and the display        +                                      */
+  /*                    -------------------------------------------------                                         */
 
   $query = "SELECT * FROM reports WHERE cell_name = '$cell_name'";
   $results = mysqli_query($conn, $query);
-  if (mysqli_query($conn, $query)){
-    $cell_reports = mysqli_fetch_all($results, MYSQLI_ASSOC);
 
+  if (mysqli_query($conn, $query))
+  {
+    $cell_reports = mysqli_fetch_all($results, MYSQLI_ASSOC);
     $total_attendence = 0;
     $total_converts = 0;
     $total_first_timers = 0;
     $weekly_attendence = 0;
     $average_first_timers = 0;
 
+    //these are number of all reports under the cell - note each report = a cell that held.
     $total_r = count($cell_reports);
 
-    foreach ($cell_reports as $report) {
+    foreach ($cell_reports as $report)
+    {
       $total_attendence = $total_attendence + $report["attendance"];
       $total_converts = $total_converts + $report["new_converts"];
       $total_first_timers = $total_first_timers + $report["first_timers"];
     }
+    if ($total_r >= 1) //this is to prevent zero division
+    {
+      $weekly_attendence = floor($total_attendence / $total_r);
+      $average_first_timers = floor($total_first_timers / $total_r);
+    }
 
-    $weekly_attendence = floor($total_attendence / $total_r);
-    $average_first_timers = floor($total_first_timers / $total_r);
-  }else{
+  }else
+  {
     echo "Error: ".mysqli_error($conn);
   }
 
-//========================================================== Get Birthday list for the month ===================================================
+  /*                    -------------------------------------------------                                         */
+  /*                    +       Handling the birthday list display        +                                      */
+  /*                    -------------------------------------------------                                         */
 
   $current_month = Date("F");
   $birthday_list = 0;
-  foreach($members as $member) {
-    if (date("F", strtotime($member["birthday"])) == $current_month){
-      $birthday_list++;
+  foreach($members as $member)
+  {
+    if (date("F", strtotime($member["birthday"])) == $current_month)
+    {
+      $birthday_list++; //this is the variable used to store the number of people who have bdays on te current month (Date("F"))
     }
   }
 
-//========================================================== Track Cell ===================================================
+  /*                    -------------------------------------------------                                         */
+  /*                    +    Handling the tracking stats of the cell   +                                      */
+  /*                    -------------------------------------------------                                         */
 
 
 
   $query = "SELECT * FROM reports WHERE cell_name = '$cell_name'";
   $results = mysqli_query($conn, $query);
-  if (mysqli_query($conn, $query)){
+
+  if (mysqli_query($conn, $query))
+  {
     $cell_reports = mysqli_fetch_all($results, MYSQLI_ASSOC);
-  }else{
+  }
+  else
+  {
     echo "Error: ".mysqli_error($conn);
   }
 
 
-  }
+ }
 
  ?>
 
 <?php include "header.php";?>
 
+
+
+
+<!--                    #################################################                                        -->
+<!--                    #################################################                                        -->
+<!--                    #################################################                                        -->
+<!--                    +          MAIN CONTENT - END OF LOGIC          +                                     -->
+<!--                    #################################################                                        -->
+<!--                   #################################################                                        -->
+<!--                    #################################################                                        -->
+
+
+
+
+
+
+<!--                    LEFT MENU TILES                               -->
 <div class="container-fluid">
   <div class="row">
-    <div class="col-md-3" style="padding-left:0pt;">
+    <div class="col-md-3" style="padding-left:0pt;" id="left-nav">
       <div class="list-group list-group-flush" id="list-tab" role="tablist">
         <a class="list-group-item list-group-item-info active" id="list-home-list" data-toggle="list" href="#list-home" role="tab" aria-controls="home">
           Welcome <?php echo $_SESSION["leader"]; ?>
@@ -201,16 +281,24 @@
         <a class="list-group-item list-group-item-info" id="list-attendance-list" data-toggle="list" href="#list-attendance" role="tab" aria-controls="profile">
           Track My Cell <span class="badge badge-warning badge-pill"><?php echo "a/w: ".$weekly_attendence; ?></span>
         </a>
-        <a class="list-group-item list-group-item-info" id="list-materials-list" data-toggle="list" href="#list-materials" role="tab" aria-controls="profile">
-          Ministry Materials <span class="badge badge-warning badge-pill"><?php echo ($member_total+7); ?></span>
-        </a>
-        <button type="button" class="list-group-item list-group-item-secondary btn btn-outline-info">Start Cell</button>
+
+        <button type="button" class="list-group-item list-group-item-secondary mybtn">Start Cell</button>
       </div>
     </div>
-    <div class="col-8">
-<!-- |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| Content for titles ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| -->
-<!-- ///////////////////////////////////////////////////////////////// Home //////////////////////////////////////////////////-->
+
+    <!--                    END OF LEFT MENU TILES                                         -->
+
+
+
+
+    <!--                    ||||||||||||||||||||||||||||||||||                                         -->
+    <!--                    DISPLAY AREA ON THE RIGHT OF TILES                                         -->
+    <!--                    |||||||||||||||||||||||||||||||||||                                         -->
+    <div class="col-8" id="alterClass">
+
       <div class="tab-content" id="nav-tabContent">
+
+          <!-- /////////////////////////////// WELCOME TILE ////////////////////////////////////////////////////////-->
           <div class="tab-pane fade show active" id="list-home" role="tabpanel" aria-labelledby="list-home-list">
             <div class="container" style="padding-top:30px;">
               <?php if ($msg != ""): ?>
@@ -226,9 +314,11 @@
               <p>Will display ROR and notes here</p>
             </div>
           </div>
+          <div id="myToggle" class="hideme"><</div>
+          <!-- ////////////////////////////END OF WELCOME TILE ////////////////////////////////////////////////////////-->
 
-<!-- ///////////////////////////////////////////////////////////////// Members //////////////////////////////////////////////////-->
 
+          <!-- /////////////////////////////// HOME TILE ////////////////////////////////////////////////////////-->
           <div class="tab-pane fade" id="list-members" role="tabpanel" aria-labelledby="list-members-list">
             <div class="container" style="padding-top:30px;">
               <h5 class="display-4 alert-light">Cell Members</h5>
@@ -348,7 +438,7 @@
                     <tbody>
                       <?php foreach ($members as $member): ?>
                       <tr>
-                        <td> <a href="member.php?member=<?php echo $member["id"]; ?>"><?php echo ($member["name"])." ".($member["surname"]); ?></a></td>
+                        <td> <a href="member.php?q=<?php echo $member["id"]; ?>"><?php echo ($member["name"])." ".($member["surname"]); ?></a></td>
                         <td><?php echo $member["email"]; ?></td>
                         <td><?php echo $member["cell_number"]; ?></td>
                         <td><?php echo $member["group_name"]; ?></td>
@@ -364,9 +454,10 @@
 
             </div> <!-- end of content container -->
           </div> <!-- end of fade -->
+          <!-- /////////////////////////////// WELCOME TILE ////////////////////////////////////////////////////////-->
 
-<!-- ///////////////////////////////////////////////////////////////// Reports //////////////////////////////////////////////////-->
 
+          <!-- /////////////////////////////// REPORTS TILE ////////////////////////////////////////////////////////-->
         <div class="tab-pane fade" id="list-reports" role="tabpanel" aria-labelledby="list-reports-list">
           <div class="container" style="padding-top:30px;">
             <h5 class="display-4 alert-light">Cell Reports</h5>
@@ -392,11 +483,12 @@
 
           </div> <!-- end of content container -->
         </div>  <!-- end of fade -->
+        <!-- /////////////////////////////// END OF REPORTS TILE ////////////////////////////////////////////////////////-->
 
-<!-- ///////////////////////////////////////////////////////////////// Birthdays //////////////////////////////////////////////////-->
 
+        <!-- /////////////////////////////// BIRTHDAY LIST TILE ////////////////////////////////////////////////////////-->
         <div class="tab-pane fade" id="list-birthdays" role="tabpanel" aria-labelledby="list-birthdays-list">
-          <div class="container" style="padding-top:30px;">
+          <div class="container" style="padding-top:30px; margin: auto;">
             <h5 class="display-4 alert-light">Birthdays<small> <span class="badge badge-info badge-pill"><?php echo $current_month; ?></span></small></h5>
             <hr>
 
@@ -418,7 +510,7 @@
                 <?php foreach ($members as $member): ?>
                 <?php if (date("F", strtotime($member["birthday"])) == $current_month): ?>
                 <tr>
-                  <td> <a href="member.php?member=<?php echo $member["id"]; ?>"><?php echo ($member["name"])." ".($member["surname"]); ?></a></td>
+                  <td> <a href="member.php?q=<?php echo $member["id"]; ?>"><?php echo ($member["name"])." ".($member["surname"]); ?></a></td>
                   <td><?php echo $member["email"]; ?></td>
                   <td><?php echo $member["cell_number"]; ?></td>
                   <td><?php echo $member["group_name"]; ?></td>
@@ -435,9 +527,10 @@
 
           </div> <!-- end of content container -->
         </div>  <!-- end of fade -->
+        <!-- /////////////////////////////// END OF BIRTHDAY LIST TILE ////////////////////////////////////////////////////////-->
 
-<!-- ///////////////////////////////////////////////////////////////// Attendance //////////////////////////////////////////////////-->
 
+        <!-- /////////////////////////////// TRACK CELL TILE ////////////////////////////////////////////////////////-->
         <div class="tab-pane fade" id="list-attendance" role="tabpanel" aria-labelledby="list-attendance-list">
           <div class="container" style="padding-top:30px;">
             <h5 class="display-4 alert-light">Attendance</h5>
@@ -468,22 +561,32 @@
 
           </div> <!-- end of content container -->
         </div>  <!-- end of fade -->
+        <!-- /////////////////////////////// END OF TRACK MY CELL TILE ////////////////////////////////////////////////////////-->
+      </div>
+      <!-- ################################################## END OF CONTENT ######################################################### -->
 
-<!-- ///////////////////////////////////////////////////////////////// Materials //////////////////////////////////////////////////-->
-
-        <div class="tab-pane fade" id="list-materials" role="tabpanel" aria-labelledby="list-materials-list">
-          <div class="container" style="padding-top:30px;">
-            <h5 class="display-4 alert-light">Materials</h5>
-            <hr>
-          </div> <!-- end of content container -->
-        </div>  <!-- end of fade -->
-
-<!-- ################################################## END OF CONTENT ######################################################### -->
-
-      </div> <!--end of content-->
     </div>
   </div> <!-- end of row-->
 </div> <!-- end of main container-->
 
+<script type="text/javascript">
+  var mytoggle = document.getElementById("myToggle");
+  myToggle.addEventListener("click", doToggle);
 
+  function doToggle(){
+    var hidethis = document.getElementById("left-nav");
+    var changethis = document.getElementById("alterClass");
+    if (hidethis.style.display != "none"){
+      mytoggle.innerHTML = ">";
+      hidethis.style.display = "none";
+      changethis.classList.remove("col-md-8");
+      changethis.classList.add("col-md-12");
+    }else{
+      hidethis.style.display = "block";
+      mytoggle.innerHTML = "<";
+      changethis.classList.remove("col-md-12");
+      changethis.classList.add("col-md-8");
+    }
+  }
+</script>
 <?php include "footer.php";?>
