@@ -5,22 +5,27 @@
 
   if (filter_has_var(INPUT_POST, "submit")){
 
-    $name_of_cell = mysqli_real_escape_string($conn, htmlentities($_POST["cellName"]));
-    $title = mysqli_real_escape_string($conn, htmlentities($_POST["title"]));
-    $leader_name = mysqli_real_escape_string($conn, htmlentities($_POST["name"]));
-    $leader_surname = mysqli_real_escape_string($conn, htmlentities($_POST["surname"]));
-    $email = mysqli_real_escape_string($conn, htmlentities($_POST["email"]));
-    $password = mysqli_real_escape_string($conn, htmlentities($_POST["password"]));
-    $password1 = mysqli_real_escape_string($conn, htmlentities($_POST["password1"]));
+    $name_of_cell = htmlentities($_POST["cellName"]);
+    $title = htmlentities($_POST["title"]);
+    $leader_name = htmlentities($_POST["name"]);
+    $leader_surname = htmlentities($_POST["surname"]);
+    $email = htmlentities($_POST["email"]);
+    $password = htmlentities($_POST["password"]);
+    $password1 = htmlentities($_POST["password1"]);
 
     //check if email is not already registered
 
-    $query = "SELECT * FROM cell_leaders WHERE username = \"$email\"";
+    //$query = "SELECT * FROM cell_leaders WHERE username = \"$email\"";
+    $sql = "SELECT * FROM cell_leaders WHERE username = :username";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['username' => $email]);
 
-    $results = mysqli_query($conn, $query);
+    //$results = mysqli_query($conn, $query);
 
-    if (mysqli_query($conn, $query)){
-      $data = mysqli_fetch_assoc($results);
+    //if (mysqli_query($conn, $query)){
+    if ($stmt){
+      //$data = mysqli_fetch_assoc($results);
+      $data = $stmt->fetch();
       if ($data != null){
         $msg = "This email has already been registered, please log in." ;
         $msgClass = "danger";
@@ -40,8 +45,21 @@
           $msg = "Password does not match";
           $msgClass = "danger";
         }else{
-          $query = "INSERT INTO cell_leaders (username, password, title, name, surname, cell_name) VALUES('$email', '$password', '$title', '$leader_name', '$leader_surname', '$name_of_cell')";
-          if (mysqli_query($conn, $query)){
+          //$query = "INSERT INTO cell_leaders (username, password, title, name, surname, cell_name) VALUES('$email', '$password', '$title', '$leader_name', '$leader_surname', '$name_of_cell')";
+          $hash = password_hash($password, PASSWORD_BCRYPT);
+          $sql = "INSERT INTO cell_leaders (username, password, title, name, surname, cell_name) VALUES(:username, :password, :title, :name, :surname, :cell_name)";
+          $stmt = $pdo->prepare($sql);
+          $stmt->execute([
+            'username' => $email,
+            'password' => $hash,
+            'title' => $title,
+            'name' => $leader_name,
+            'surname' => $leader_surname,
+            'cell_name' => $name_of_cell
+          ]);
+
+          //if (mysqli_query($conn, $query)){
+          if ($stmt){
             $msg = $name_of_cell." by ".$title." ".$leader_name." ".$leader_surname." has been succesfully registered";
             $msgClass = "success";
           }else{

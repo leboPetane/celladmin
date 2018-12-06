@@ -11,59 +11,58 @@
     //================================GET Member ===============================
     if($_GET["q"]){
       $id = $_GET["q"];
-      $query = "SELECT * FROM members WHERE id= '$id'";
-      $results = mysqli_query($conn, $query);
-      if (mysqli_query($conn, $query)){
-        $data = mysqli_fetch_assoc($results);
-        if ($data['cell_group'] != $_SESSION["username"]){
-          header("Location: ".WELCOME);
-        }else {
-          $query = "SELECT * FROM members WHERE id= '$id'";
-          $results = mysqli_query($conn, $query);
-          if (mysqli_query($conn, $query)){
-            $data = mysqli_fetch_assoc($results);
+      //$query = "SELECT * FROM members WHERE id= '$id'";
+      $sql = "SELECT * FROM members WHERE id= :id";
+      $stmt = $pdo->prepare($sql);
+      $stmt->execute(['id' => $id]);
+      $member = $stmt-> fetch();
 
-            if ( filter_has_var(INPUT_GET, "delete") ){
-              echo "deleting";
-              $query = "DELETE FROM members WHERE members. id = '$id'";
-
-              if (mysqli_query($conn, $query)){
-                header("Location: ".WELCOME);
-              }else{
-                echo "Error: ".mysqli_error($conn);
-              }
-            }else if ( filter_has_var(INPUT_GET, "update") ){
-              echo "Updating";
-              $title = $_GET["title"];
-              $name = $_GET["name"];
-              $surname = $_GET["surname"];
-              $email = $_GET["email"];
-              $bday = $_GET["birthday"];
-              $number = $_GET["cell_number"];
-              $group = $_GET["group"];
-              $chapter = $_GET["chapter"];
-              $query = "UPDATE members
-                        SET title = '$title',
-                            name = '$name',
-                            surname = '$surname',
-                            email = '$email',
-                            birthday = '$bday',
-                            cell_number = '$number',
-                            group_name = '$group',
-                            chapter = '$chapter'
-
-                            WHERE members. id = '$id'";
-
-              if (mysqli_query($conn, $query)){
-                header("Location: ".WELCOME);
-              }else {
-                echo "Error: ".mysqli_error($conn);
-              }
-            }
-          }  //---> Query endif
-        }
-      }else{
+      if ($member->cell_group != $_SESSION["username"] || $member == false){
         header("Location: ".WELCOME);
+      }else{
+        if ( filter_has_var(INPUT_GET, "delete") ){
+          echo "deleting";
+          $sql = "DELETE FROM members WHERE members. id = :id";
+          $stmt = $pdo->prepare($sql);
+          $stmt->execute(['id' => $id]);
+          header("Location: ".WELCOME);
+        }else if ( filter_has_var(INPUT_GET, "update") ){
+          echo "Updating";
+          $title = htmlentities($_GET["title"]);
+          $name = htmlentities($_GET["name"]);
+          $surname = htmlentities($_GET["surname"]);
+          $email = htmlentities($_GET["email"]);
+          $bday = htmlentities($_GET["birthday"]);
+          $number = htmlentities($_GET["cell_number"]);
+          $group = htmlentities($_GET["group"]);
+          $chapter = htmlentities($_GET["chapter"]);
+          $sql = "UPDATE members
+                    SET title = :title,
+                        name = :name,
+                        surname = :surname,
+                        email = :email,
+                        birthday = :birthday,
+                        cell_number = :cell_number,
+                        group_name = :group_name,
+                        chapter = :chapter
+
+                        WHERE members. id = :id";
+          $stmt = $pdo->prepare($sql);
+          $stmt->execute([
+            'title' => $title,
+            'name' => $name,
+            'surname' => $surname,
+            'email' => $email,
+            'birthday' => $bday,
+            'cell_number' => $number,
+            'group_name' => $group,
+            'chapter' => $chapter,
+            'id' => $id
+          ]);
+          if ($stmt){
+            header("Location: ".WELCOME);
+          }
+        }
       }
     }else{
       header("Location: ".WELCOME);
@@ -89,7 +88,7 @@
             <div class="form-group col-md-2">
               <label for="title">Title</label>
               <select name="title" class="form-control">
-                <option selected><?php echo $data["title"] ?></option>
+                <option selected><?php echo $member->title; ?></option>
                 <option>Pastor</option>
                 <option>Deacon</option>
                 <option>Brother</option>
@@ -99,40 +98,40 @@
 
             <div class="form-group col-md-5">
               <label for="name">Name</label>
-              <input type="text" class="form-control" name="name" value = "<?php echo $data["name"]; ?>">
+              <input type="text" class="form-control" name="name" value = "<?php echo $member->name; ?>">
             </div>
 
             <div class="form-group col-md-5">
               <label for="surname"> Surname</label>
-              <input type="text" class="form-control" name="surname" value = "<?php echo $data["surname"]; ?>">
+              <input type="text" class="form-control" name="surname" value = "<?php echo $member->surname; ?>">
             </div>
           </div>
 
           <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" class="form-control" name="email" value = "<?php echo $data["email"] ?>">
+            <input type="email" class="form-control" name="email" value = "<?php echo $member->email; ?>">
           </div>
 
           <div class="form-group">
             <label for="birthday">Birthday</label>
-            <input type="text" class="form-control"  name="birthday" value = "<?php echo $data['birthday']; ?>">
+            <input type="text" class="form-control"  name="birthday" value = "<?php echo $member->birthday; ?>">
           </div>
 
           <div class="form-group">
             <label for="cell_number">Cell Number</label>
-            <input type="text" class="form-control" name="cell_number" value = "<?php echo $data["cell_number"] ?>">
+            <input type="text" class="form-control" name="cell_number" value = "<?php echo $member->cell_number; ?>">
           </div>
 
           <div class="form-row">
             <div class="form-group col-md-6">
               <label for="group">Group</label>
-              <input type="text" class="form-control"  name="group" value = "<?php echo $data["group_name"] ?>">
+              <input type="text" class="form-control"  name="group" value = "<?php echo $member->group_name; ?>">
             </div>
 
             <div class="form-group col-md-6">
               <label for="chapter">Chapter</label>
               <select name="chapter" required class="form-control">
-                <option selected><?php echo $data["chapter"] ?></option>
+                <option selected><?php echo $member->chapter ?></option>
                 <?php $groups = array('UCT','UWC', 'Stellenbosch', 'Colleges', 'CPUT TOWN', 'CPUT BELLVILLE', 'OTHER') ?>
                 <?php foreach($groups as $group): ?>
                 <option><?php echo $group; ?></option>
@@ -145,15 +144,15 @@
             <div class="form-row">
               <div class="form-group col-md-4">
                 <label for="attended">Attended</label>
-                <input type="text" class="form-control" name="attended" value = "<?php echo $data["attendance"] ?>">
+                <input type="text" class="form-control" name="attended" value = "<?php echo $member->attendance; ?>">
               </div>
               <div class="form-group col-md-4">
                 <label for="invited">Invited</label>
-                <input type="text" class="form-control" name="invited" value = "<?php echo $data["invites"] ?>">
+                <input type="text" class="form-control" name="invited" value = "<?php echo $member->invites; ?>">
               </div>
               <div class="form-group col-md-4">
                 <label for="joined">Joined</label>
-                <input type="text" class="form-control" name="joined" value = "<?php echo $data["joined"] ?>">
+                <input type="text" class="form-control" name="joined" value = "<?php echo $member->joined; ?>">
               </div>
             </div>
           </fieldset>

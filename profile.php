@@ -8,12 +8,13 @@
   $msg = "";
   $msgClass = "danger";
   $user = $_SESSION["user"];
-  $query = "SELECT * FROM cell_leaders WHERE username = '$user'";
 
-  $results = mysqli_query($conn, $query);
+  $sql = "SELECT * FROM cell_leaders WHERE username = :username";
+  $stmt = $pdo->prepare($sql);
+  $stmt->execute(['username' => $user]);
 
-  if (mysqli_query($conn, $query)){
-    $data =  mysqli_fetch_assoc($results);
+  if ($stmt) {
+    $data = $stmt->fetch();
   }else{
     $msg = "Error: ".mysqli_error($conn)." Please contact dev team.";
     $msgClass = "danger";
@@ -21,11 +22,11 @@
 
   if (filter_has_var(INPUT_POST, "submit")){
       $cell_name = $_SESSION["username"];
-      $title = mysqli_real_escape_string($conn, htmlentities($_POST["title"]));
-      $name = mysqli_real_escape_string($conn, htmlentities($_POST["leader_name"]));
-      $surname = mysqli_real_escape_string($conn, htmlentities($_POST["leader_surname"]));
-      $password = mysqli_real_escape_string($conn, htmlentities($_POST["password"]));
-      $password1 = mysqli_real_escape_string($conn, htmlentities($_POST["password1"]));
+      $title = htmlentities($_POST["title"]);
+      $name = htmlentities($_POST["leader_name"]);
+      $surname = htmlentities($_POST["leader_surname"]);
+      $password = htmlentities($_POST["password"]);
+      $password1 = htmlentities($_POST["password1"]);
 
       if ($password != $password1){
         $msg = " Password does not match, please retype password.";
@@ -33,30 +34,50 @@
       }else{
         //update username
         if ($password!=""){
-          $query = "UPDATE cell_leaders
-                    SET password = \"$password\",
-                        title = \"$title\",
-                        name = \"$name\",
-                        surname = \"$surname\"
-                        WHERE cell_leaders. username = \"$user\"";
+
+          $sql = "UPDATE cell_leaders
+                    SET password = :password,
+                        title = :title,
+                        name = :name,
+                        surname = :surname
+                        WHERE username = :username";
+          $hash = password_hash($password, PASSWORD_BCRYPT);
+          $stmt = $pdo-> prepare($sql);
+          $stmt -> execute([
+            'password'=> $hash,
+            'title' => $title,
+            'name' => $name,
+            'surname' => $surname,
+            'username' => $user
+          ]);
+
         }else {
-          $query = "UPDATE cell_leaders
-                    SET title = \"$title\",
-                        name = \"$name\",
-                        surname = \"$surname\"
-                        WHERE cell_leaders. username = \"$user\"";
+
+          $sql = "UPDATE cell_leaders
+                    SET title = :title,
+                        name = :name,
+                        surname = :surname
+                        WHERE username = :username";
+          $stmt = $pdo->prepare($sql);
+          $stmt -> execute([
+            'title' => $title,
+            'name' => $name,
+            'surname' => $surname,
+            'username' => $user
+          ]);
         }
 
-        if (mysqli_query($conn, $query)){
+        if ($stmt){
 
-          //updating new cell details
-          $query = "SELECT * FROM cell_leaders WHERE username = \"$user\"";
-          $results = mysqli_query($conn, $query);
-          if (mysqli_query($conn, $query)){
-            $data =  mysqli_fetch_assoc($results);
+          $sql = "SELECT * FROM cell_leaders WHERE username = :username";
+          $stmt = $pdo->prepare($sql);
+          $stmt->execute(['username' => $user]);
+
+          if ($stmt){
+            $data = $stmt->fetch();
           }
 
-          $_SESSION["leader"] = $data["title"]." ".$data["name"];
+          $_SESSION["leader"] = $data->title." ".$data->name;
           $cell_name = $_SESSION["username"];
           $msg = $cell_name." has been succesfully updated. ";
           $msgClass = "success";
@@ -83,13 +104,13 @@
       <fieldset disabled>
       <div class="form-group">
         <label for="cell_name">Cell Name</label>
-        <input type="text" class="form-control" name="cell_name" value = "<?php echo $data["cell_name"] ?>">
+        <input type="text" class="form-control" name="cell_name" value = "<?php echo $data->cell_name; ?>">
       </div>
       </fieldset>
       <div class="form-group">
         <label for="title">Title</label>
         <select name="title" class="form-control">
-          <option selected><?php echo $data["title"] ?></option>
+          <option selected><?php echo $data->title; ?></option>
           <option>Pastor</option>
           <option>Deacon</option>
           <option>Brother</option>
@@ -99,16 +120,16 @@
 
       <div class="form-group">
         <label for="leader_name">Name</label>
-        <input type="text" class="form-control" name="leader_name" value = "<?php echo $data["name"] ?>">
+        <input type="text" class="form-control" name="leader_name" value = "<?php echo $data->name; ?>">
       </div>
       <div class="form-group">
         <label for="leader_surname">Surname</label>
-        <input type="text" class="form-control" name="leader_surname" name="leader_surname" value = "<?php echo $data["surname"] ?>">
+        <input type="text" class="form-control" name="leader_surname" name="leader_surname" value = "<?php echo $data->surname; ?>">
       </div>
       <fieldset disabled>
         <div class="form-group">
           <label for="email">Email</label>
-          <input type="email" class="form-control" name="cell_name" name="email" value = "<?php echo $data["username"] ?>">
+          <input type="email" class="form-control" name="cell_name" name="email" value = "<?php echo $data->username; ?>">
         </div>
       </fieldset>
       <div class="form-row">

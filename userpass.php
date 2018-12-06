@@ -4,30 +4,51 @@
   $msgClass='';
 
   if (filter_has_var(INPUT_POST, "submit1")){
-    $email = mysqli_real_escape_string($conn, htmlentities($_POST["email"]));
-    //$password = mysqli_real_escape_string($conn, htmlentities($_POST["password"]));
-    //$password1 = mysqli_real_escape_string($conn, htmlentities($_POST["password1"]));
+    $email =  htmlentities($_POST["email"]);
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)){
+      $msg = "Invalid Email Entered" ;
+      $msgClass = "danger";
+    }else{
+      //check if email is not already registered
 
-    //check if email is not already registered
+      $sql = "SELECT * FROM cell_leaders WHERE username = :username";
+      $stmt = $pdo->prepare($sql);
+      $stmt->execute(['username' => $email]);
 
-    $query = "SELECT * FROM cell_leaders WHERE username = \"$email\"";
+      if ($stmt){
+        $leader = $stmt->fetch();
+        if ($leader != null){
 
-    $results = mysqli_query($conn, $query);
-
-    if (mysqli_query($conn, $query)){
-      $data = mysqli_fetch_assoc($results);
-      if ($data != null){
-        //send email here
-        $msg = "Account found! An email has been sent to ".$email." with a new temporary password." ;
-        $msgClass = "success";
+          //$secret = $leader->name.$leader->members;
+          $secret = 12345;
+          $sql = "UPDATE cell_leaders
+                    SET password = :password,
+                        title = :title,
+                        name = :name,
+                        surname = :surname
+                        WHERE username = :username";
+          $hash = password_hash($secret, PASSWORD_BCRYPT);
+          $stmt = $pdo-> prepare($sql);
+          $stmt -> execute([
+            'password'=> $hash,
+            'title' => $leader->title,
+            'name' => $leader->name,
+            'surname' => $leader->surname,
+            'username' => $leader->username
+          ]);
+          //send email here
+          $msg ="Account found! An email has been sent to ".$email." with a new temporary password.";
+          $msgClass = "success";
+        }else{
+          $msg = "Account not found - please check email or register as a new cell" ;
+          $msgClass = "danger";
+        }
       }else{
-        $msg = "Account not found - please check email" ;
+        $msg = "Error: Something went wrong, contact dev team";
         $msgClass = "danger";
       }
-    }else{
-      $msg = "Error: Something went wrong, contact dev team";
-      $msgClass = "danger";
     }
+
   }
 ?>
 
@@ -48,7 +69,7 @@
 
                 <label for="email" class="col-sm-2 col-form-label">Enter your email</label>
                 <div class="col-sm-10">
-                  <input type="email" class="form-control col-md-4" name="email" value="<?php echo isset($_POST["email"])? $email : "" ?>">
+                  <input type="text" class="form-control col-md-4" name="email" value="<?php echo isset($_POST["email"])? $email : "" ?>">
                 </div>
 
               </div>
