@@ -10,6 +10,7 @@
     $leader_name = htmlentities($_POST["name"]);
     $leader_surname = htmlentities($_POST["surname"]);
     $email = htmlentities($_POST["email"]);
+    $location = htmlentities($_POST['location']);
     $password = htmlentities($_POST["password"]);
     $password1 = htmlentities($_POST["password1"]);
 
@@ -20,19 +21,17 @@
     $stmt = $pdo->prepare($sql);
     $stmt->execute(['username' => $email]);
 
-    //$results = mysqli_query($conn, $query);
-
-    //if (mysqli_query($conn, $query)){
     if ($stmt){
-      //$data = mysqli_fetch_assoc($results);
+
       $data = $stmt->fetch();
       if ($data != null){
         $msg = "This email has already been registered, please log in." ;
         $msgClass = "danger";
       }else{
+
         //User not found - Form validation
 
-        if ($name_of_cell == "" || $leader_name == "" || $leader_surname == "" ){
+        if ($name_of_cell == "" || $leader_name == "" || $leader_surname == "" || $location == ""){
           $msg = "All fields are required";
           $msgClass = "danger";
         }else if ($title != "Pastor" && $title != "Deacon" && $title != "Brother" && $title !="Sister"){
@@ -45,9 +44,9 @@
           $msg = "Password does not match";
           $msgClass = "danger";
         }else{
-          //$query = "INSERT INTO cell_leaders (username, password, title, name, surname, cell_name) VALUES('$email', '$password', '$title', '$leader_name', '$leader_surname', '$name_of_cell')";
+
           $hash = password_hash($password, PASSWORD_BCRYPT);
-          $sql = "INSERT INTO cell_leaders (username, password, title, name, surname, cell_name) VALUES(:username, :password, :title, :name, :surname, :cell_name)";
+          $sql = "INSERT INTO cell_leaders (username, password, title, name, surname, cell_name, location) VALUES(:username, :password, :title, :name, :surname, :cell_name, :location)";
           $stmt = $pdo->prepare($sql);
           $stmt->execute([
             'username' => $email,
@@ -55,7 +54,8 @@
             'title' => $title,
             'name' => $leader_name,
             'surname' => $leader_surname,
-            'cell_name' => $name_of_cell
+            'cell_name' => $name_of_cell,
+            'location' => $location
           ]);
 
           //if (mysqli_query($conn, $query)){
@@ -117,19 +117,25 @@
               </div>
 
               <div class="form-row">
-                <div class="form-group col-md-6">
+                <div class="form-group col-md-7">
                   <label for="email">Email</label>
                   <input type="email" class="form-control" name="email" value="<?php echo isset($_POST["email"])? $email : "" ?>">
                 </div>
-                <div class="form-group col-md-6">
-                  <label for="password">Password</label>
-                  <input type="password" class="form-control" name = "password" value="<?php echo isset($_POST["password"])? $password : "" ?>">
+                <div class="form-group col-md-5">
+                  <label for="location">Location Of Cell</label>
+                  <input type="text" class="form-control" name = "location" value="<?php echo isset($_POST["location"])? $password : "" ?>">
                 </div>
               </div>
 
-              <div class="form-group">
-                <label for="password1">Repeat Password</label>
-                <input type="password" class="form-control" name = "password1" value="<?php echo isset($_POST["password1"])? $password1 : "" ?>">
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="password">Password</label>
+                  <input type="password" class="form-control" name = "password" value="<?php echo isset($_POST["password"])? $password1 : "" ?>">
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="password1">Repeat Password</label>
+                  <input type="password" class="form-control" name = "password1" value="<?php echo isset($_POST["password1"])? $password1 : "" ?>">
+                </div>
               </div>
 
               <button type="submit" class="btn btn-outline-info" name="submit">Register Cell</button>

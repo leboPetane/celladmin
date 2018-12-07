@@ -297,17 +297,19 @@
       $attendee = $stmt->fetch();
       $attendee_attendance = 1 + $attendee->attendance;
 
-      $sql = "UPDATE members
-                SET attendace = :attendace
-                WHERE id = :id";
+      $sql = "UPDATE members SET attendance = :attendance WHERE id = :id";
       $stmt = $pdo->prepare($sql);
       $stmt->execute([
-        'attendace' => $attendee_attendance,
+        'attendance' => $attendee_attendance,
         'id' => $attendee_id
       ]);
+
+
     }
 
-    header("Location: ".WELCOME);
+    $msg = "Report Created succesfully";
+    $msgClass = "success";
+    //header("Location: ".WELCOME);
 
   }
 
@@ -461,9 +463,9 @@
                   <small>
                     <?php echo $msg ?>
                   </small>
-                  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
+
+                  <a href="http://localhost/celladmin/welcome.php" class="close">&times;</a>
+                  
                 </div>
               <?php endif; ?>
               <p>Will display ROR and notes here</p>
