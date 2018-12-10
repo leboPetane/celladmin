@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 29, 2018 at 10:51 PM
+-- Generation Time: Dec 10, 2018 at 03:54 PM
 -- Server version: 10.1.34-MariaDB
 -- PHP Version: 7.2.8
 
@@ -21,18 +21,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `cell_ministry`
 --
-
--- --------------------------------------------------------
-
---
--- Table structure for table `attendance`
---
-
-CREATE TABLE `attendance` (
-  `id` int(11) NOT NULL,
-  `cell_name` varchar(255) NOT NULL,
-  `total_attendance` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -73,7 +61,7 @@ CREATE TABLE `cell_leaders` (
 --
 
 INSERT INTO `cell_leaders` (`id`, `username`, `password`, `title`, `name`, `surname`, `members`, `cell_name`, `reports`, `location`) VALUES
-(1, 'test@test.com', '12345', 'Brother', 'Chris', 'Test', 4, 'Online Cell', 2, 'Online via GoToMeeting');
+(1, 'test@test.com', '$2y$10$GbLa4EcrI1E4h1nlxCq6YOoxRMkbut5kLen3Knu3y.PcezmfbmdDW', 'Brother', 'Chris', 'Test', 1, 'Online Cell', 3, 'Online via GoToMeeting');
 
 -- --------------------------------------------------------
 
@@ -102,10 +90,7 @@ CREATE TABLE `members` (
 --
 
 INSERT INTO `members` (`id`, `title`, `name`, `surname`, `email`, `cell_number`, `cell_group`, `group_name`, `chapter`, `attendance`, `invites`, `joined`, `birthday`) VALUES
-(18, '', 'Paul', 'Smith', 'paul@gmail.com', '0828897654', 'Online Cell', 'I', 'UCT', 0, 2, '2018-09-08 03:05:07', '1994-08-21 22:00:00'),
-(19, '', 'Lebohang', 'Petane', 'lebopetane@gmail.com', '0783837421', 'Online Cell', 'I', 'UWC', 0, 1, '2018-09-08 03:06:19', '1995-09-16 22:00:00'),
-(20, '', 'Example', 'Fish', 'fish@gmail.com', '0985643278', 'Online Cell', 'I', 'Stellenbosch', 0, 0, '2018-09-08 06:10:07', '2000-09-26 22:00:00'),
-(21, '', 'Gloria', 'Petane', 'glory@gmail.com', '0789876542', 'Online Cell', 'I', 'UCT', 0, 0, '2018-10-29 14:05:46', '2018-10-28 22:00:00');
+(1, 'Brother', 'Lebo', 'Petane', 'lebopetane@gmail.com', '0783837421', 'Online Cell', 'I', 'UWC', 0, 0, '2018-09-08 03:06:19', '1995-09-16 22:00:00');
 
 -- --------------------------------------------------------
 
@@ -138,26 +123,22 @@ CREATE TABLE `reports` (
   `location` varchar(255) NOT NULL,
   `holy_ghost_filled` int(11) NOT NULL,
   `offering` int(11) NOT NULL,
-  `summary` text NOT NULL
+  `summary` text NOT NULL,
+  `duration` varchar(255) NOT NULL DEFAULT '1hr 20min 20sec'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `reports`
 --
 
-INSERT INTO `reports` (`id`, `cell_name`, `date`, `attendance`, `first_timers`, `new_converts`, `topic`, `location`, `holy_ghost_filled`, `offering`, `summary`) VALUES
-(1, 'Online Cell', '2018-09-08 04:27:11', 2, 0, 0, 'The you of God', 'Online via GoToMeeting', 0, 0, 'Today we spoke about the you of God, what it means to be the tabernacle of God.'),
-(2, 'Online Cell', '2018-10-29 20:06:43', 15, 6, 1, 'Eternal life', 'Online Via GoToMeeting', 0, 0, 'Today we discussed on eternal life. Eternity is the life of God and from the word of God we discovered that eternal life cannot perish , apart from its durability which is forever we learnt when you have eternal life your life cannot be subdued');
+INSERT INTO `reports` (`id`, `cell_name`, `date`, `attendance`, `first_timers`, `new_converts`, `topic`, `location`, `holy_ghost_filled`, `offering`, `summary`, `duration`) VALUES
+(1, 'Online Cell', '2018-09-08 04:27:11', 2, 0, 0, 'The you of God', 'Online via GoToMeeting', 0, 0, 'Today we spoke about the you of God, what it means to be the tabernacle of God.', '1hr 20min 20sec'),
+(2, 'Online Cell', '2018-10-29 20:06:43', 15, 6, 1, 'Eternal life', 'Online Via GoToMeeting', 0, 0, 'Today we discussed on eternal life. Eternity is the life of God and from the word of God we discovered that eternal life cannot perish , apart from its durability which is forever we learnt when you have eternal life your life cannot be subdued', '1hr 20min 20sec'),
+(7, 'Online Cell', '2018-12-06 12:50:11', 10, 3, 2, 'My Third cell', 'Online via GoToMeeting', 1, 0, 'This is my third cell that i hosted', '0hr(s) 0min(s) 3sec');
 
 --
 -- Indexes for dumped tables
 --
-
---
--- Indexes for table `attendance`
---
-ALTER TABLE `attendance`
-  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `cells`
@@ -194,12 +175,6 @@ ALTER TABLE `reports`
 --
 
 --
--- AUTO_INCREMENT for table `attendance`
---
-ALTER TABLE `attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `cells`
 --
 ALTER TABLE `cells`
@@ -209,13 +184,13 @@ ALTER TABLE `cells`
 -- AUTO_INCREMENT for table `cell_leaders`
 --
 ALTER TABLE `cell_leaders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `members`
 --
 ALTER TABLE `members`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `notes`
@@ -227,7 +202,7 @@ ALTER TABLE `notes`
 -- AUTO_INCREMENT for table `reports`
 --
 ALTER TABLE `reports`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
